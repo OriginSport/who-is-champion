@@ -3,7 +3,7 @@ pragma solidity 0.4.19;
 import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract ChampionSimple is Ownable {
+contract ChampionRound is Ownable {
   using SafeMath for uint;
 
   event LogDistributeReward(address addr, uint reward);
@@ -36,7 +36,7 @@ contract ChampionSimple is Ownable {
     _;
   }
 
-  function ChampionSimple(uint _startTime, uint _minimumBet) payable public {
+  function ChampionRound(uint _startTime, uint _minimumBet) payable public {
     deposit = msg.value;
     startTime = _startTime;
     minimumBet = _minimumBet;
@@ -53,23 +53,25 @@ contract ChampionSimple is Ownable {
     return true;
   }
 
-  function placeChampion(uint choice) payable beforeTimestamp(startTime) public {
-    require(msg.value >= minimumBet);
-    require(choice >= 0);
-    require(!checkPlayerExists(msg.sender));
+  function placeBet(uint choice) payable beforeTimestamp(startTime) public {
+    if (checkPlayerExists(msg.sender)) {
+      playerInfo[msg.sender].betAmount = playerInfo[msg.sender].betAmount.add(msg.value);
+      playerInfo[msg.sender].choice = choice;
+      totalBetAmount = totalBetAmount.add(msg.value);
+    } else {
+      require(msg.value == minimumBet);
+      playerInfo[msg.sender].betAmount = msg.value;
+      playerInfo[msg.sender].choice = choice;
 
-    playerInfo[msg.sender].betAmount = msg.value;
-    playerInfo[msg.sender].choice = choice;
-
-    totalBetAmount = totalBetAmount.add(msg.value);
-    numberOfBet = numberOfBet.add(1);
-    players.push(msg.sender);
-    LogParticipant(msg.sender, choice, msg.value);
+      totalBetAmount = totalBetAmount.add(msg.value);
+      numberOfBet = numberOfBet.add(1);
+      players.push(msg.sender);
+      LogParticipant(msg.sender, choice, msg.value);
+    }
   }
 
-  function close(uint teamId) onlyOwner public {
-    winChoice = teamId;
-    distributeReward();
+  function getPlayerBetInfo(address addr) view public returns (uint, uint) {
+    return (playerInfo[addr].choice, playerInfo[addr].betAmount);
   }
 
   /**
@@ -84,20 +86,7 @@ contract ChampionSimple is Ownable {
   }
 
   /**
-   * @dev distribute ether to every winner as they choosed odds
-   */
-  function distributeReward() internal {
-    for (uint i = 0; i < players.length; i++) {
-      if (playerInfo[players[i]].choice == winChoice) {
-        uint reward = deposit.add(totalBetAmount).mul(playerInfo[players[i]].betAmount).div(totalBetAmount);
-        players[i].transfer(reward);
-        LogDistributeReward(players[i], reward);
-      }
-    }
-  }
-
-  /**
-   * @dev dealer can withdraw the remain ether if distribute exceeds max length
+   * @dev owner can withdraw the remain ether if distribute exceeds max length
    */
   function withdraw() onlyOwner public {
     uint _balance = address(this).balance;
