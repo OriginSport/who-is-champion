@@ -72,6 +72,10 @@ contract ChampionSimple is Ownable {
     distributeReward();
   }
 
+  function getPlayerBetInfo(address addr) view public returns (uint, uint) {
+    return (playerInfo[addr].choice, playerInfo[addr].betAmount);
+  }
+
   /**
    * @dev if there are some reasons lead game postpone or cancel
    *      the bet will also cancel and refund every bet
