@@ -102,6 +102,13 @@ contract ChampionSimple is Ownable {
   }
 
   /**
+   * @dev get the players
+   */
+  function getPlayers() view public returns (address[]) {
+    return players;
+  }
+
+  /**
    * @dev dealer can withdraw the remain ether if distribute exceeds max length
    */
   function withdraw() onlyOwner public {
