@@ -37,6 +37,7 @@ contract ChampionSimple is Ownable {
   }
 
   function ChampionSimple(uint _startTime, uint _minimumBet) payable public {
+    require(_startTime > now);
     deposit = msg.value;
     startTime = _startTime;
     minimumBet = _minimumBet;
@@ -53,7 +54,7 @@ contract ChampionSimple is Ownable {
     return true;
   }
 
-  function placeChampion(uint choice) payable beforeTimestamp(startTime) public {
+  function placeBet(uint choice) payable beforeTimestamp(startTime) public {
     require(msg.value >= minimumBet);
     require(choice >= 0);
     require(!checkPlayerExists(msg.sender));
