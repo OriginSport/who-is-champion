@@ -2,28 +2,7 @@
 
 This is a smart contract that allow user to bet on champion of fifa 2018 world cup.
 
-## Dependencies
-1. nodejs, and make sure it's version above 8.0.0
-2. npm
-3. truffle
-4. ganache
-
-## Build
-1. First run `npm install` to install node_modules
-2. Then run `truffle compile`
-
-## Run tests
-1. run `truffle test` to execute tests
-
-### Mainnet
-
-Not deployed
-
-### Testnet
-
-For test contract: [0x660ABe77f36Ca3937a130f8BDF6800EB837d1F83](https://ropsten.etherscan.io/address/0x660ABe77f36Ca3937a130f8BDF6800EB837d1F83)
-
-### Team id mapping
+## Team id mapping
 
 | team_id      | cn_name    | en_name |
 | ---           | ---         | --- |
@@ -59,3 +38,26 @@ For test contract: [0x660ABe77f36Ca3937a130f8BDF6800EB837d1F83](https://ropsten.
 | 162 | 塞内加尔 | Senegal
 | 163 | 哥伦比亚 | Colombia
 | 164 | 日本 | Japan
+
+## Dependencies
+1. nodejs, and make sure it's version above 8.0.0
+2. npm
+3. truffle
+4. ganache
+
+## Build
+1. First run `npm install` to install node_modules
+2. Then run `truffle compile`
+
+## Run tests
+1. run `truffle test` to execute tests
+
+### Mainnet
+
+Not deployed
+
+### Testnet
+
+For test contract: [0x660ABe77f36Ca3937a130f8BDF6800EB837d1F83](https://ropsten.etherscan.io/address/0x660ABe77f36Ca3937a130f8BDF6800EB837d1F83)
+
+
