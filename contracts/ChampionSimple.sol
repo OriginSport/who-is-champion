@@ -38,6 +38,11 @@ contract ChampionSimple is Ownable {
     _;
   }
 
+  /**
+   * @dev the construct function
+   * @param _startTime the deadline of betting
+   * @param _minimumBet the minimum bet amount
+   */
   function ChampionSimple(uint _startTime, uint _minimumBet) payable public {
     require(_startTime > now);
     deposit = msg.value;
@@ -56,6 +61,10 @@ contract ChampionSimple is Ownable {
     return true;
   }
 
+  /**
+   * @dev to bet which team will be the champion
+   * @param chioce the choice of the participant(actually team id)
+   */
   function placeBet(uint choice) payable beforeTimestamp(startTime) public {
     require(choice > 0);
     require(!checkPlayerExists(msg.sender));
@@ -70,6 +79,10 @@ contract ChampionSimple is Ownable {
     LogParticipant(msg.sender, choice, msg.value);
   }
 
+  /**
+   * @dev allow user to change their choice before a timestamp
+   * @param chioce the choice of the participant(actually team id)
+   */
   function updateChoice(uint choice) beforeTimestamp(startTime) public {
     require(choice > 0);
     require(checkPlayerExists(msg.sender));
@@ -80,15 +93,26 @@ contract ChampionSimple is Ownable {
     LogModifyChoice(msg.sender, choice);
   }
 
+  /**
+   * @dev close who is champion bet with the champion id
+   */
   function close(uint teamId) onlyOwner public {
     winChoice = teamId;
     distributeReward();
   }
 
+  /**
+   * @dev get player bet information
+   * @param addr indicate the bet address
+   */
   function getPlayerBetInfo(address addr) view public returns (uint, uint) {
     return (playerInfo[addr].choice, playerInfo[addr].betAmount);
   }
 
+  /**
+   * @dev get the bet numbers of a specific choice
+   * @param choice indicate the choice
+   */
   function getNumberByChoice(uint choice) view public returns (uint) {
     return choiceNumber[choice];
   }
