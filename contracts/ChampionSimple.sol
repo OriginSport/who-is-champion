@@ -8,6 +8,7 @@ contract ChampionSimple is Ownable {
 
   event LogDistributeReward(address addr, uint reward);
   event LogParticipant(address addr, uint choice, uint betAmount);
+  event LogModifyChoice(address addr, uint choice);
   event LogRefund(address addr, uint betAmount);
   event LogWithdraw(address addr, uint amount);
 
@@ -25,6 +26,7 @@ contract ChampionSimple is Ownable {
 
   address [] public players;
   mapping(address => Player) public playerInfo;
+  mapping(uint => uint) public choiceNumber;
  
   modifier beforeTimestamp(uint timestamp) {
     require(now < timestamp);
@@ -55,17 +57,27 @@ contract ChampionSimple is Ownable {
   }
 
   function placeBet(uint choice) payable beforeTimestamp(startTime) public {
-    require(msg.value >= minimumBet);
-    require(choice >= 0);
+    require(choice > 0);
     require(!checkPlayerExists(msg.sender));
+    require(msg.value >= minimumBet);
 
     playerInfo[msg.sender].betAmount = msg.value;
     playerInfo[msg.sender].choice = choice;
-
     totalBetAmount = totalBetAmount.add(msg.value);
     numberOfBet = numberOfBet.add(1);
     players.push(msg.sender);
+    choiceNumber[choice] = choiceNumber[choice].add(1);
     LogParticipant(msg.sender, choice, msg.value);
+  }
+
+  function updateChoice(uint choice) beforeTimestamp(startTime) public {
+    require(choice > 0);
+    require(checkPlayerExists(msg.sender));
+
+    choiceNumber[playerInfo[msg.sender].choice] = choiceNumber[playerInfo[msg.sender].choice].sub(1);
+    choiceNumber[choice] = choiceNumber[choice].add(1);
+    playerInfo[msg.sender].choice = choice;
+    LogModifyChoice(msg.sender, choice);
   }
 
   function close(uint teamId) onlyOwner public {
@@ -75,6 +87,10 @@ contract ChampionSimple is Ownable {
 
   function getPlayerBetInfo(address addr) view public returns (uint, uint) {
     return (playerInfo[addr].choice, playerInfo[addr].betAmount);
+  }
+
+  function getNumberByChoice(uint choice) view public returns (uint) {
+    return choiceNumber[choice];
   }
 
   /**
