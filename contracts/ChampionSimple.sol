@@ -103,6 +103,13 @@ contract ChampionSimple is Ownable {
   }
 
   /**
+   * @dev anyone could recharge deposit
+   */
+  function rechargeDeposit() public payable {
+    deposit = deposit.add(msg.value);
+  }
+
+  /**
    * @dev get player bet information
    * @param addr indicate the bet address
    */
