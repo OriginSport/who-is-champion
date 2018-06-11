@@ -8,7 +8,7 @@ contract ChampionSimple is Ownable {
 
   event LogDistributeReward(address addr, uint reward);
   event LogParticipant(address addr, uint choice, uint betAmount);
-  event LogModifyChoice(address addr, uint choice);
+  event LogModifyChoice(address addr, uint oldChoice, uint newChoice);
   event LogRefund(address addr, uint betAmount);
   event LogWithdraw(address addr, uint amount);
 
@@ -63,7 +63,7 @@ contract ChampionSimple is Ownable {
 
   /**
    * @dev to bet which team will be the champion
-   * @param chioce the choice of the participant(actually team id)
+   * @param choice the choice of the participant(actually team id)
    */
   function placeBet(uint choice) payable beforeTimestamp(startTime) public {
     require(choice > 0);
@@ -81,16 +81,17 @@ contract ChampionSimple is Ownable {
 
   /**
    * @dev allow user to change their choice before a timestamp
-   * @param chioce the choice of the participant(actually team id)
+   * @param choice the choice of the participant(actually team id)
    */
   function updateChoice(uint choice) beforeTimestamp(startTime) public {
     require(choice > 0);
     require(checkPlayerExists(msg.sender));
 
-    choiceNumber[playerInfo[msg.sender].choice] = choiceNumber[playerInfo[msg.sender].choice].sub(1);
+    uint oldChoice = playerInfo[msg.sender].choice;
+    choiceNumber[oldChoice] = choiceNumber[oldChoice].sub(1);
     choiceNumber[choice] = choiceNumber[choice].add(1);
     playerInfo[msg.sender].choice = choice;
-    LogModifyChoice(msg.sender, choice);
+    LogModifyChoice(msg.sender, oldChoice, choice);
   }
 
   /**
