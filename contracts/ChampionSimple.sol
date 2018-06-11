@@ -128,7 +128,7 @@ contract ChampionSimple is Ownable {
   /**
    * @dev anyone could recharge deposit
    */
-  function rechargeDeposit() public payable {
+  function rechargeDeposit() payable public {
     deposit = deposit.add(msg.value);
   }
 
