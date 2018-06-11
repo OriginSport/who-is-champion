@@ -27,6 +27,9 @@ contract('Champion Simple', accounts => {
   const startTime = 1528988400
   const minimumBet = 5*10**16
   const deposit = 1e18
+
+  const winChoice = 3
+  let winNumber = 0
  
   before(() => {
     return ChampionSimple.new(startTime, minimumBet, {from: owner, value: deposit})
@@ -54,13 +57,13 @@ contract('Champion Simple', accounts => {
 
   it('check get player bet info', async () => {
     const p = await bet.getPlayerBetInfo(user1)
-    console.log(p)
   })
   
   it('test user place bet', async () => {
-    const choice = 2
+    const choice = winChoice
     const addr = user1
     const tx = await bet.placeBet(choice, {from: addr, value: minimumBet})
+    winNumber ++
     const _totalBetAmount = await bet.totalBetAmount()
     const playerInfo = await bet.playerInfo(addr)
 
@@ -82,14 +85,39 @@ contract('Champion Simple', accounts => {
     let choice = 1
     for (let i = 5; i < 100; i++) {
       choice = Math.floor(Math.random() * 32) + 1
+      if (choice == winChoice) {
+        winNumber ++
+      }
       await bet.placeBet(choice, {from: accounts[i], value: minimumBet})
     }
   })
 
   it('test close bet', async () => {
     let w = 1
-    const tx = await bet.close(3)
-    console.log(tx.logs)
+    const c = 3
+    const tx = await bet.saveResult(c)
+    const result = await bet.winChoice()
+    assert.equal(result.toNumber(), c)
+  })
+
+  //it('test refund', async () => {
+  //  const tx = await bet.refund({from: owner})
+  //})
+
+  it('test withdraw reward', async () => {
+    const winReward = await bet.winReward()
+    const _winChoice = await bet.winChoice()
+    //const tx = await bet.withdrawReward()
+    const _winNumber = await bet.numberOfChoice(3)
+    const _deposit = await bet.deposit()
+    const _number = await bet.numberOfBet()
+    const _result = await bet.addressOfChoice(3, user1)
+
+    const _winReward = (_deposit.add(minimumBet*_number.toNumber()).toNumber()/_winNumber.toNumber())
+
+    assert.equal(_winNumber.toNumber(), winNumber, 'winNumber is not equal')
+    assert.equal(_winChoice, winChoice, 'winChoice is not correct')
+    assert.equal(_winReward, winReward, 'winReward is not correct')
   })
 
   after(async () => {
