@@ -60,7 +60,7 @@ contract('Champion Simple', accounts => {
   })
   
   it('test user place bet', async () => {
-    const choice = winChoice
+    const choice = winChoice - 1
     const addr = user1
     const tx = await bet.placeBet(choice, {from: addr, value: minimumBet})
     winNumber ++
@@ -76,9 +76,22 @@ contract('Champion Simple', accounts => {
   })
 
   it('test user place bet', async () => {
-    const choice = 3
+    const choice = 2
     const addr = user1
     await assertRevert(bet.placeBet(choice, {from: addr, value: minimumBet}))
+  })
+
+  it('test user modify his choice', async () => {
+    const addr = user1
+    const tx = await bet.modifyChoice(winChoice, {from: addr})
+
+    const playerInfo = await bet.playerInfo(addr)
+
+    assert.equal(tx.logs[0].args.addr, addr)
+    assert.equal(tx.logs[0].args.oldChoice, winChoice-1)
+    assert.equal(tx.logs[0].args.newChoice, winChoice)
+    assert.equal(playerInfo[0].toNumber(), minimumBet)
+    assert.equal(playerInfo[1].toNumber(), winChoice)
   })
 
   it('test multi place bet', async () => {
