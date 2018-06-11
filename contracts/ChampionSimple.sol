@@ -160,19 +160,6 @@ contract ChampionSimple is Ownable {
   }
 
   /**
-   * @dev distribute ether to every winner as they choosed odds
-   */
-  function distributeReward() internal {
-    for (uint i = 0; i < players.length; i++) {
-      if (playerInfo[players[i]].choice == winChoice) {
-        uint reward = deposit.add(totalBetAmount).mul(playerInfo[players[i]].betAmount).div(totalBetAmount);
-        players[i].transfer(reward);
-        LogDistributeReward(players[i], reward);
-      }
-    }
-  }
-
-  /**
    * @dev get the players
    */
   function getPlayers() view public returns (address[]) {
