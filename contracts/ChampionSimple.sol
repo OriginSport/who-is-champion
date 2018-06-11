@@ -11,13 +11,16 @@ contract ChampionSimple is Ownable {
   event LogModifyChoice(address addr, uint oldChoice, uint newChoice);
   event LogRefund(address addr, uint betAmount);
   event LogWithdraw(address addr, uint amount);
+  event LogWinChoice(uint choice, uint reward);
 
   uint public minimumBet = 5 * 10 ** 16;
   uint public deposit = 0;
   uint public totalBetAmount = 0;
   uint public startTime;
   uint public winChoice;
+  uint public winReward;
   uint public numberOfBet;
+  bool public betClosed = false;
 
   struct Player {
     uint betAmount;
@@ -26,7 +29,8 @@ contract ChampionSimple is Ownable {
 
   address [] public players;
   mapping(address => Player) public playerInfo;
-  mapping(uint => uint) public choiceNumber;
+  mapping(uint => uint) public numberOfChoice;
+  mapping(uint => mapping(address => bool)) public addressOfChoice;
  
   modifier beforeTimestamp(uint timestamp) {
     require(now < timestamp);
@@ -75,7 +79,8 @@ contract ChampionSimple is Ownable {
     totalBetAmount = totalBetAmount.add(msg.value);
     numberOfBet = numberOfBet.add(1);
     players.push(msg.sender);
-    choiceNumber[choice] = choiceNumber[choice].add(1);
+    numberOfChoice[choice] = numberOfChoice[choice].add(1);
+    addressOfChoice[choice][msg.sender] = true;
     LogParticipant(msg.sender, choice, msg.value);
   }
 
@@ -83,23 +88,41 @@ contract ChampionSimple is Ownable {
    * @dev allow user to change their choice before a timestamp
    * @param choice the choice of the participant(actually team id)
    */
-  function updateChoice(uint choice) beforeTimestamp(startTime) public {
+  function modifyChoice(uint choice) beforeTimestamp(startTime) public {
     require(choice > 0);
     require(checkPlayerExists(msg.sender));
 
     uint oldChoice = playerInfo[msg.sender].choice;
-    choiceNumber[oldChoice] = choiceNumber[oldChoice].sub(1);
-    choiceNumber[choice] = choiceNumber[choice].add(1);
+    numberOfChoice[oldChoice] = numberOfChoice[oldChoice].sub(1);
+    numberOfChoice[choice] = numberOfChoice[choice].add(1);
     playerInfo[msg.sender].choice = choice;
+
+    addressOfChoice[oldChoice][msg.sender] = false;
+    addressOfChoice[choice][msg.sender] = true;
     LogModifyChoice(msg.sender, oldChoice, choice);
   }
 
   /**
    * @dev close who is champion bet with the champion id
    */
-  function close(uint teamId) onlyOwner public {
+  function saveResult(uint teamId) onlyOwner public {
     winChoice = teamId;
-    distributeReward();
+    betClosed = true;
+    winReward = deposit.add(totalBetAmount).div(numberOfChoice[winChoice]);
+    LogWinChoice(winChoice, winReward);
+  }
+
+  /**
+   * @dev every user can withdraw his reward
+   */
+  function withdrawReward() public {
+    require(betClosed);
+    require(winChoice > 0);
+    require(winReward > 0);
+    require(addressOfChoice[winChoice][msg.sender]);
+
+    msg.sender.transfer(winReward);
+    LogDistributeReward(msg.sender, winReward);
   }
 
   /**
@@ -122,7 +145,7 @@ contract ChampionSimple is Ownable {
    * @param choice indicate the choice
    */
   function getNumberByChoice(uint choice) view public returns (uint) {
-    return choiceNumber[choice];
+    return numberOfChoice[choice];
   }
 
   /**
