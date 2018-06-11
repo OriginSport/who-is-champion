@@ -45,6 +45,13 @@ contract('Champion Simple', accounts => {
     assert.equal(d.toNumber(), deposit)
   })
 
+  it('test recharge deposit', async () => {
+    const od = await bet.deposit()
+    await bet.rechargeDeposit({from: owner, value: deposit*10})
+    const nd = await bet.deposit()
+    assert.equal(od.add(deposit*10).toNumber(), nd.toNumber())
+  })
+
   it('check get player bet info', async () => {
     const p = await bet.getPlayerBetInfo(user1)
     console.log(p)
