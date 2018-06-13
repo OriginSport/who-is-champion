@@ -1,4 +1,4 @@
-const { assertRevert } = require('truffle-js-test-helper')
+const { assertRevert, addDaysOnEVM, setTimestamp } = require('truffle-js-test-helper')
 const w3 = require('web3')
 const ChampionSimple = artifacts.require('./ChampionSimple.sol')
 
@@ -35,7 +35,8 @@ contract('Champion Simple', accounts => {
 
   console.log(`owner:${owner}\nuser1:${user1}\nuser2:${user2}`)
   let bet
-  const startTime = 1528988400
+  const startTime = 1529431200 
+  //const startTime = parseInt(new Date().getTime()/1000) + 1
   const minimumBet = 5*10**16
   const deposit = 1e18
 
@@ -182,6 +183,14 @@ contract('Champion Simple', accounts => {
     }
   })
 
+  //it('test place bet after start time', async () => {
+  //  //await addDaysOnEVM(5)
+  //  await setTimestamp(1529431200+100)
+  //  const choice = 2
+  //  const addr = user1
+  //  await assertRevert(bet.placeBet(choice, {from: addr, value: minimumBet}))
+  //})
+ 
   it('test close bet', async () => {
     const tx = await bet.saveResult(winChoice)
     const _winChoice = await bet.winChoice()
