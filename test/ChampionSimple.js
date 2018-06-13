@@ -8,6 +8,17 @@ function getStr(hexStr) {
 function getBytes(str) {
   return w3.utils.fromAscii(str)
 }
+function getBalance (address) {
+  return new Promise (function (resolve, reject) {
+    web3.eth.getBalance(address, function (error, result) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
+    })
+  })
+}
 
 contract('Champion Simple', accounts => {
   // account[0] points to the owner on the testRPC setup
@@ -30,6 +41,7 @@ contract('Champion Simple', accounts => {
 
   const winChoice = 3
   let winNumber = 0
+  let totalBetAmount = 0
  
   before(() => {
     return ChampionSimple.new(startTime, minimumBet, {from: owner, value: deposit})
@@ -59,11 +71,11 @@ contract('Champion Simple', accounts => {
     const p = await bet.getPlayerBetInfo(user1)
   })
   
-  it('test user place bet', async () => {
+  it('test user1 place bet', async () => {
     const choice = winChoice - 1
     const addr = user1
     const tx = await bet.placeBet(choice, {from: addr, value: minimumBet})
-    winNumber ++
+    totalBetAmount += minimumBet
     const _totalBetAmount = await bet.totalBetAmount()
     const playerInfo = await bet.playerInfo(addr)
 
@@ -72,18 +84,69 @@ contract('Champion Simple', accounts => {
     assert.equal(tx.logs[0].args.betAmount, minimumBet)
     assert.equal(playerInfo[0].toNumber(), minimumBet)
     assert.equal(playerInfo[1].toNumber(), choice)
-    assert.equal(_totalBetAmount.toNumber(), minimumBet)
+    assert.equal(_totalBetAmount.toNumber(), totalBetAmount)
   })
 
-  it('test user place bet', async () => {
+  it('test user2 place bet', async () => {
+    const choice = winChoice - 1
+    const addr = user2
+    const tx = await bet.placeBet(choice, {from: addr, value: minimumBet})
+    totalBetAmount += minimumBet
+    const _totalBetAmount = await bet.totalBetAmount()
+    const playerInfo = await bet.playerInfo(addr)
+
+    assert.equal(tx.logs[0].args.addr, addr)
+    assert.equal(tx.logs[0].args.choice, choice)
+    assert.equal(tx.logs[0].args.betAmount, minimumBet)
+    assert.equal(playerInfo[0].toNumber(), minimumBet)
+    assert.equal(playerInfo[1].toNumber(), choice)
+    assert.equal(_totalBetAmount.toNumber(), totalBetAmount)
+  })
+
+  it('test user3 place bet', async () => {
+    const choice = winChoice
+    const addr = user3
+    const tx = await bet.placeBet(choice, {from: addr, value: minimumBet})
+    winNumber ++
+    totalBetAmount += minimumBet
+    const _totalBetAmount = await bet.totalBetAmount()
+    const playerInfo = await bet.playerInfo(addr)
+
+    assert.equal(tx.logs[0].args.addr, addr)
+    assert.equal(tx.logs[0].args.choice, choice)
+    assert.equal(tx.logs[0].args.betAmount, minimumBet)
+    assert.equal(playerInfo[0].toNumber(), minimumBet)
+    assert.equal(playerInfo[1].toNumber(), choice)
+    assert.equal(_totalBetAmount.toNumber(), totalBetAmount)
+  })
+
+  it('test user4 place bet', async () => {
+    const choice = winChoice
+    const addr = user4
+    const tx = await bet.placeBet(choice, {from: addr, value: minimumBet})
+    winNumber ++
+    totalBetAmount += minimumBet
+    const _totalBetAmount = await bet.totalBetAmount()
+    const playerInfo = await bet.playerInfo(addr)
+
+    assert.equal(tx.logs[0].args.addr, addr)
+    assert.equal(tx.logs[0].args.choice, choice)
+    assert.equal(tx.logs[0].args.betAmount, minimumBet)
+    assert.equal(playerInfo[0].toNumber(), minimumBet)
+    assert.equal(playerInfo[1].toNumber(), choice)
+    assert.equal(_totalBetAmount.toNumber(), totalBetAmount)
+  })
+
+  it('test same user multiple place bet', async () => {
     const choice = 2
     const addr = user1
     await assertRevert(bet.placeBet(choice, {from: addr, value: minimumBet}))
   })
 
-  it('test user modify his choice', async () => {
+  it('test user1 modify his choice', async () => {
     const addr = user1
     const tx = await bet.modifyChoice(winChoice, {from: addr})
+    winNumber ++
 
     const playerInfo = await bet.playerInfo(addr)
 
@@ -92,6 +155,20 @@ contract('Champion Simple', accounts => {
     assert.equal(tx.logs[0].args.newChoice, winChoice)
     assert.equal(playerInfo[0].toNumber(), minimumBet)
     assert.equal(playerInfo[1].toNumber(), winChoice)
+  })
+
+  it('test user3 modify his choice', async () => {
+    const addr = user3
+    const tx = await bet.modifyChoice(winChoice-1, {from: addr})
+    winNumber --
+
+    const playerInfo = await bet.playerInfo(addr)
+
+    assert.equal(tx.logs[0].args.addr, addr)
+    assert.equal(tx.logs[0].args.oldChoice, winChoice)
+    assert.equal(tx.logs[0].args.newChoice, winChoice-1)
+    assert.equal(playerInfo[0].toNumber(), minimumBet)
+    assert.equal(playerInfo[1].toNumber(), winChoice-1)
   })
 
   it('test multi place bet', async () => {
@@ -106,31 +183,60 @@ contract('Champion Simple', accounts => {
   })
 
   it('test close bet', async () => {
-    let w = 1
-    const c = 3
-    const tx = await bet.saveResult(c)
-    const result = await bet.winChoice()
-    assert.equal(result.toNumber(), c)
+    const tx = await bet.saveResult(winChoice)
+    const _winChoice = await bet.winChoice()
+    const _winReward = await bet.winReward()
+    const _winNumber = await bet.numberOfChoice(winChoice)
+    const _deposit = await bet.deposit()
+    const _number = await bet.numberOfBet()
+    const _result = await bet.addressOfChoice(winChoice, user1)
+
+    const winReward = (_deposit.add(minimumBet*_number.toNumber()).toNumber()/_winNumber.toNumber())
+
+    assert.equal(_winNumber.toNumber(), winNumber, 'winNumber is not equal')
+    assert.equal(_winChoice.toNumber(), winChoice, 'winChoice is not correct')
+    assert.equal(winReward, _winReward, 'winReward is not correct')
   })
 
   //it('test refund', async () => {
   //  const tx = await bet.refund({from: owner})
   //})
+  
+  it('test not win user2 withdraw', async () => {
+    await assertRevert(bet.withdrawReward({from: user2}))
+  })
 
-  it('test withdraw reward', async () => {
+  it('test not win user3 withdraw', async () => {
+    await assertRevert(bet.withdrawReward({from: user3}))
+  })
+
+  it('test user1 withdraw reward', async () => {
+    const addr = user1
+
     const winReward = await bet.winReward()
-    const _winChoice = await bet.winChoice()
-    //const tx = await bet.withdrawReward()
-    const _winNumber = await bet.numberOfChoice(3)
-    const _deposit = await bet.deposit()
-    const _number = await bet.numberOfBet()
-    const _result = await bet.addressOfChoice(3, user1)
+    const _b1 = await getBalance(addr)
+    const tx = await bet.withdrawReward({from: addr})
+    const gasUsed = parseInt(tx.receipt.gasUsed) * 100000000000
+    const b1 = await getBalance(addr)
 
-    const _winReward = (_deposit.add(minimumBet*_number.toNumber()).toNumber()/_winNumber.toNumber())
+    assert.equal(_b1.add(winReward).toNumber(), b1.add(gasUsed).toNumber(), 'user reward is not correct')
+  })
 
-    assert.equal(_winNumber.toNumber(), winNumber, 'winNumber is not equal')
-    assert.equal(_winChoice, winChoice, 'winChoice is not correct')
-    assert.equal(_winReward, winReward, 'winReward is not correct')
+  it('test user4 withdraw reward', async () => {
+    const addr = user4
+
+    const winReward = await bet.winReward()
+    const _b1 = await getBalance(addr)
+    const tx = await bet.withdrawReward({from: addr})
+    const gasUsed = parseInt(tx.receipt.gasUsed) * 100000000000
+    const b1 = await getBalance(addr)
+
+    assert.equal(_b1.add(winReward).toNumber(), b1.add(gasUsed).toNumber(), 'user reward is not correct')
+  })
+
+  it('test user1 withdraw reward again', async () => {
+    const addr = user1
+    await assertRevert(bet.withdrawReward({from: addr}))
   })
 
   after(async () => {
