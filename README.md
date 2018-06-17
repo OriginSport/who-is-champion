@@ -58,6 +58,7 @@ Not deployed
 
 ### Testnet
 
-For test contract: [0x660ABe77f36Ca3937a130f8BDF6800EB837d1F83](https://ropsten.etherscan.io/address/0x660ABe77f36Ca3937a130f8BDF6800EB837d1F83)
+For test contract Beta1.0: [0x660ABe77f36Ca3937a130f8BDF6800EB837d1F83](https://ropsten.etherscan.io/address/0x660ABe77f36Ca3937a130f8BDF6800EB837d1F83)
+For test contract Beta1.1: [0xdf16872deCF0d06419CF96296057724AF31188f6](https://ropsten.etherscan.io/address/0xdf16872deCF0d06419CF96296057724AF31188f6)
 
 
