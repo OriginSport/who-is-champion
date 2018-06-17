@@ -54,7 +54,7 @@ This is a smart contract that allow user to bet on champion of fifa 2018 world c
 
 ### Mainnet
 
-Not deployed
+For mainnet contract: [0xbd8dd6d726c3fcdbfa9a1279a98a7320cfe4d800](https://etherscan.io/address/0xbd8dd6d726c3fcdbfa9a1279a98a7320cfe4d800)
 
 ### Testnet
 
