@@ -12,9 +12,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "web3": "^0.20.6",
+    "openzeppelin-solidity": "^1.11.0",
     "zeppelin-solidity": "1.8.0"
   },
   "devDependencies": {
-    "truffle-js-test-helper": "^1.0.1"
+    "truffle-js-test-helper": "^1.0.4"
   }
 }
