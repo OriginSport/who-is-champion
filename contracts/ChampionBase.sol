@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
 import 'openzeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract ChampionSimple is Ownable {
+contract ChampionBase is Ownable {
     using SafeMath for uint;
 
     event LogDistributeReward(address addr, uint reward);
@@ -37,12 +37,12 @@ contract ChampionSimple is Ownable {
     mapping(address => bool) public withdrawRecord;
 
     modifier beforeTimestamp(uint timestamp) {
-        require(now < timestamp);
+        require(now < timestamp, "not before timestamp");
         _;
     }
 
     modifier afterTimestamp(uint timestamp) {
-        require(now >= timestamp);
+        require(now >= timestamp, "not after timestamp");
         _;
     }
 
@@ -51,11 +51,10 @@ contract ChampionSimple is Ownable {
      * @param _startTime the deadline of betting
      * @param _minimumBet the minimum bet amount
      * @param _winRewardPercent percent of total bet amount will reward to winner(the remainder belong to bet owner)
-     * @param msg.value the deposit of this bet
      */
     constructor(uint _startTime, uint _minimumBet, uint _winRewardPercent) payable public {
-        require(_startTime > now);
-        require(_winRewardPercent <= 100);
+        require(_startTime > now, "start time should greater than now");
+        require(_winRewardPercent <= 100, "percent is out of range");
         deposit = msg.value;
         startTime = _startTime;
         minimumBet = _minimumBet;
@@ -71,11 +70,10 @@ contract ChampionSimple is Ownable {
     }
 
     /**
-     * @dev get the bet numbers of a specific choice
-     * @param choice indicate the choice
+     * @dev get the total amount of players
      */
-    function getNumberByChoice(uint choice) view public returns (uint) {
-        return choiceCounter[choice];
+    function getBetCounter() view public returns (uint) {
+        return players.length;
     }
 
     /**
@@ -90,10 +88,6 @@ contract ChampionSimple is Ownable {
      * @param player the address of the participant
      */
     function checkPlayerExists(address player) public view returns (bool) {
-        //        if (playerInfo[player].choice == 0) {
-        //            return false;
-        //        }
-        //        return true;
         return (playerInfo[player].choice != 0);
     }
 
@@ -102,9 +96,9 @@ contract ChampionSimple is Ownable {
      * @param choice the choice of the participant(actually team id)
      */
     function placeBet(uint choice) payable beforeTimestamp(startTime) external {
-        require(choice > 0);
-        require(!checkPlayerExists(msg.sender));
-        require(msg.value >= minimumBet);
+        require(choice > 0, "choice should greater than 0");
+        require(!checkPlayerExists(msg.sender), "player is existing");
+        require(msg.value >= minimumBet, "bet amount should greater than minimum bet amount");
 
         playerInfo[msg.sender].betAmount = msg.value;
         playerInfo[msg.sender].choice = choice;
@@ -121,8 +115,8 @@ contract ChampionSimple is Ownable {
      * @param choice the choice of the participant(actually team id)
      */
     function modifyChoice(uint choice) beforeTimestamp(startTime) external {
-        require(choice > 0);
-        require(checkPlayerExists(msg.sender));
+        require(choice > 0, "choice should greater than 0");
+        require(checkPlayerExists(msg.sender), "player doesn't exist");
 
         uint oldChoice = playerInfo[msg.sender].choice;
         choiceCounter[oldChoice] = choiceCounter[oldChoice].sub(1);
@@ -140,7 +134,7 @@ contract ChampionSimple is Ownable {
     function saveResult(uint teamId) onlyOwner afterTimestamp(startTime) external {
         winChoice = teamId;
         betClosed = true;
-        winReward = deposit.add(totalBetAmount.mul(winRewardPercent / 100)).div(choiceCounter[winChoice]);
+        winReward = deposit.add(totalBetAmount.mul(winRewardPercent).div(100)).div(choiceCounter[winChoice]);
 
         emit LogWinChoice(winChoice, winReward);
     }
@@ -149,11 +143,11 @@ contract ChampionSimple is Ownable {
      * @dev every user can withdraw his reward
      */
     function withdrawReward() afterTimestamp(startTime) external {
-        require(betClosed);
-        require(!withdrawRecord[msg.sender]);
-        require(winChoice > 0);
-        require(winReward > 0);
-        require(addressOfChoice[winChoice][msg.sender]);
+        require(betClosed, "bet has not been closed");
+        require(!withdrawRecord[msg.sender], "player had withdrawn");
+        require(winChoice > 0, "win choice should greater than 0");
+        require(winReward > 0, "winReward should greater than 0");
+        require(addressOfChoice[winChoice][msg.sender], "player's choice doesn't match winChoice");
 
         msg.sender.transfer(winReward);
         withdrawRecord[msg.sender] = true;
